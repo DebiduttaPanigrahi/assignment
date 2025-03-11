@@ -1,127 +1,89 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const images = [
-        'image_1.png',
-        'image_2.png',
-        'image_3.png',
-        'image_4.png',
-        'image_5.png',
-    ];
+const taskInput = document.getElementById("taskInput");
+const addButton = document.getElementById("addButton");
+const taskList = document.getElementById("taskList");
+const emptyMessage = document.getElementById("emptyMessage");
+const totalTasksElement = document.getElementById("totalTasks");
+const completedTasksElement = document.getElementById("completedTasks");
 
-    const imageContainer = document.querySelector('.image-container');
-    const prevBtn = document.getElementById('prev');
-    const nextBtn = document.getElementById('next');
-    const dotsContainer = document.getElementById('dots');
-    const sliderContainer = document.querySelector('.slider-container');
+let totalTasks = 0;
+let completedTasks = 0;
 
-    let currentIndex = 0;
-    let touchStartX = 0;
-    let touchEndX = 0;
+function addTask() {
+  const taskText = taskInput.value.trim();
 
-    function initSlider() {
-        images.forEach((src, index) => {
-            const img = document.createElement('img');
-            img.src = src;
-            img.alt = `Slide ${index + 1}`;
-            img.classList.add('slide');
+  if (taskText !== "") {
+    totalTasks++;
 
-            if (index === 0) {
-                img.classList.add('active');
-            }
+    const taskItem = document.createElement("li");
+    taskItem.className = "task-item";
 
-            imageContainer.appendChild(img);
+    const taskContent = document.createElement("span");
+    taskContent.className = "task-content";
+    taskContent.textContent = taskText;
 
-            const dot = document.createElement('span');
-            dot.classList.add('dot');
-            if (index === 0) {
-                dot.classList.add('active-dot');
-            }
-
-            dot.addEventListener('click', () => {
-                goToSlide(index);
-            });
-
-            dotsContainer.appendChild(dot);
-        });
-    }
-
-    function goToSlide(index) {
-        const slides = document.querySelectorAll('.slide');
-        const dots = document.querySelectorAll('.dot');
-
-        slides.forEach(slide => {
-            slide.classList.remove('active');
-        });
-
-        dots.forEach(dot => {
-            dot.classList.remove('active-dot');
-        });
-
-        slides[index].classList.add('active');
-        dots[index].classList.add('active-dot');
-
-        currentIndex = index;
-    }
-
-    function nextSlide() {
-        const newIndex = (currentIndex + 1) % images.length;
-        goToSlide(newIndex);
-    }
-
-    function prevSlide() {
-        const newIndex = (currentIndex - 1 + images.length) % images.length;
-        goToSlide(newIndex);
-    }
-
-    nextBtn.addEventListener('click', nextSlide);
-    prevBtn.addEventListener('click', prevSlide);
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowRight') {
-            nextSlide();
-        } else if (e.key === 'ArrowLeft') {
-            prevSlide();
-        }
+    const completeButton = document.createElement("button");
+    completeButton.className = "complete-btn";
+    completeButton.textContent = "Done";
+    completeButton.addEventListener("click", function () {
+      if (!taskContent.classList.contains("completed")) {
+        taskContent.classList.add("completed");
+        completedTasks++;
+        completeButton.disabled = true;
+        completeButton.style.backgroundColor = "#808080";
+      }
+      updateStats();
     });
 
-    imageContainer.addEventListener('touchstart', function (e) {
-        touchStartX = e.changedTouches[0].screenX;
-    }, false);
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "delete-btn";
+    deleteButton.textContent = "Delete";
+    deleteButton.addEventListener("click", function () {
+      taskList.removeChild(taskItem);
+      totalTasks--;
 
-    imageContainer.addEventListener('touchend', function (e) {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    }, false);
+      if (taskContent.classList.contains("completed")) {
+        completedTasks--;
+      }
 
-    function handleSwipe() {
-        const minSwipeDistance = 50;
-        const swipeDistance = touchEndX - touchStartX;
-
-        if (Math.abs(swipeDistance) >= minSwipeDistance) {
-            if (swipeDistance < 0) {
-                nextSlide();
-            } else {
-                prevSlide();
-            }
-        }
-    }
-
-    let slideInterval = setInterval(nextSlide, 5000);
-
-    sliderContainer.addEventListener('mouseenter', () => {
-        clearInterval(slideInterval);
+      updateStats();
+      toggleEmptyMessage();
     });
 
-    sliderContainer.addEventListener('mouseleave', () => {
-        slideInterval = setInterval(nextSlide, 5000);
-    });
+    taskItem.appendChild(taskContent);
+    taskItem.appendChild(completeButton);
+    taskItem.appendChild(deleteButton);
 
-    sliderContainer.addEventListener('touchstart', () => {
-        clearInterval(slideInterval);
-    }, false);
+    taskList.appendChild(taskItem);
 
-    sliderContainer.addEventListener('touchend', () => {
-        slideInterval = setInterval(nextSlide, 5000);
-    }, false);
+    taskInput.value = "";
 
-    initSlider();
+    toggleEmptyMessage();
+
+    updateStats();
+
+    taskInput.focus();
+  }
+}
+
+function toggleEmptyMessage() {
+  if (taskList.children.length > 0) {
+    emptyMessage.style.display = "none";
+  } else {
+    emptyMessage.style.display = "block";
+  }
+}
+
+function updateStats() {
+  totalTasksElement.textContent = `Total: ${totalTasks}`;
+  completedTasksElement.textContent = `Completed: ${completedTasks}`;
+}
+
+addButton.addEventListener("click", addTask);
+
+taskInput.addEventListener("keypress", function (event) {
+  if (event.key === "Enter") {
+    addTask();
+  }
 });
+
+toggleEmptyMessage();
